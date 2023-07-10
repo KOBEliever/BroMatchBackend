@@ -2,9 +2,12 @@ spring:
   application:
     name: BroMatch
   datasource:
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: 010609dy
     url: jdbc:mysql://localhost:3306/bromatch
 server:
   port: 8081
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: false
