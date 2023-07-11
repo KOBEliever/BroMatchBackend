@@ -2,6 +2,8 @@ package com.dy.bromatchbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dy.bromatchbackend.common.ErrorCode;
+import com.dy.bromatchbackend.exception.BusinessException;
 import com.dy.bromatchbackend.service.UserService;
 import com.dy.bromatchbackend.model.domain.User;
 import com.dy.bromatchbackend.mapper.UserMapper;
@@ -37,36 +39,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //1. 校验
         // 非空
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return -1;
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请求参数不能为空");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请求参数不能为空");
         }
         //长度
         if (userAccount.length() < 4) {
-            return -1;
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号长度过短");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号长度过短");
         }
         if(userPassword.length()<8 || checkPassword.length()<8){
-            return -1;
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码长度过短");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码长度过短");
         }
         //账户不能包含特殊字符
         String pattern = ".*[*?!&￥$%^#,./@\";:><\\]\\[}{\\-=+_\\\\|》《。，、？’‘“”~`）].*$";
         if(Pattern.matches(pattern, userAccount)) {
-            return -1;
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号不能包含特殊字符");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号不能包含特殊字符");
         }
         //密码和校验密码相同
         if(!userPassword.equals(checkPassword)){
-            return -1;
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码和校验密码相同");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码和校验密码相同");
         }
         //账户不能重复 (查询了数据库，这个校验应该放到最后校验)
         QueryWrapper<User> qw = new QueryWrapper<>();
         qw.eq("userAccount",userAccount);
         long count = this.count(qw);
         if(count>0){
-            return -1;
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号已注册");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号已注册");
         }
         //2.加密
         String md5Password = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
@@ -76,8 +72,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserPassword(md5Password);
         boolean result = this.save(user);//保存user成功后，会把id塞给user
         if(!result){
-//            throw new BusinessException(ErrorCode.SYSTEM_EXCEPTION,"注册失败");
-            return -1;
+            throw new BusinessException(ErrorCode.SYSTEM_EXCEPTION,"注册失败");
         }
         return user.getId();
     }
@@ -87,23 +82,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //1. 校验
         // 非空
         if (StringUtils.isAllBlank(userAccount, userPassword)) {
-            return null;
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请求参数不能为空");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请求参数不能为空");
         }
         //长度
         if (userAccount.length() < 4) {
-            return null;
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号长度过短");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号长度过短");
         }
         if(userPassword.length()<8){
-            return null;
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码长度过短");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码长度过短");
         }
         //账户不能包含特殊字符
         String pattern = ".*[*?!&￥$%^#,./@\";:><\\]\\[}{\\-=+_\\\\|》《。，、？’‘“”~`）].*$";
         if(Pattern.matches(pattern, userAccount)) {
-            return null;
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号不能包含特殊字符");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号不能包含特殊字符");
         }
         //2.加密
         String md5Password = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
@@ -113,8 +104,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = userMapper.selectOne(qw);
         if (user == null) {
             log.info("user login failed, userAccount cannot match userPassword");
-            return null;
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或密码不正确");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或密码不正确");
         }
         //3.用户脱敏
         User safetyUser = getSaftyUser(user);
