@@ -1,6 +1,7 @@
 package com.dy.bromatchbackend.service;
 import java.util.Date;
 
+import com.dy.bromatchbackend.controller.UserController;
 import com.dy.bromatchbackend.model.domain.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,19 +13,21 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserServiceTest {
     @Resource
     private UserService userService;
+    @Resource
+    private UserController userController;
     @Test
     public void testAddUser()
     {
         User user = new User();
-        user.setUsername("");
-        user.setUserAccount("test");
+        user.setUsername("admin");
+        user.setUserAccount("admin");
         user.setGender(0);
-        user.setUserPassword("1");
+        user.setUserPassword("12345678");
         user.setUserStatus(0);
         user.setCreateTime(new Date());
         user.setUpdateTime(new Date());
         user.setIsDelete(0);
-        user.setUserRole(0);
+        user.setUserRole(1);
         boolean res = userService.save(user);
         System.out.println(user.getId());
         assertTrue(res);
