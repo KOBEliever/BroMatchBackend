@@ -4,6 +4,7 @@ import com.dy.bromatchbackend.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author LEGION
@@ -35,4 +36,5 @@ public interface UserService extends IService<User> {
      * @return
      */
     User getSaftyUser(User user);
+    List<User> searchUsersByTags(List<String> tagNameList);
 }

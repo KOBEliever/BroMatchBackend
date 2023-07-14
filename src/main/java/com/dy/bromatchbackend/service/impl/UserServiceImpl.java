@@ -10,11 +10,15 @@ import com.dy.bromatchbackend.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.dy.bromatchbackend.constant.UserConstant.USER_LOGIN_STATE;
 
@@ -133,7 +137,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setUserRole(user.getUserRole());
         return safetyUser;
     }
-
+    @Override
+    public List<User> searchUsersByTags(List<String> tagNameList){
+        if(CollectionUtils.isEmpty(tagNameList)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        //拼接and查询数据
+        //like'%Java%' and like'%C++%'
+        for(String tagName : tagNameList){
+            queryWrapper = queryWrapper.like("tags",tagName);
+        }
+        List<User> userList = userMapper.selectList(queryWrapper);
+        return userList.stream().map(this::getSaftyUser).collect(Collectors.toList());
+    }
 }
 
 
