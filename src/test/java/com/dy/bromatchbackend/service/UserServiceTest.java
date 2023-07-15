@@ -1,8 +1,11 @@
 package com.dy.bromatchbackend.service;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import com.dy.bromatchbackend.controller.UserController;
 import com.dy.bromatchbackend.model.domain.User;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -31,5 +34,11 @@ class UserServiceTest {
         boolean res = userService.save(user);
         System.out.println(user.getId());
         assertTrue(res);
+    }
+    @Test
+    public void testSearchByTags(){
+        List<String> tagNames = Arrays.asList("java","python");
+        List<User> userList = userService.searchUsersByTags(tagNames);
+        Assert.assertNull(userList);
     }
 }

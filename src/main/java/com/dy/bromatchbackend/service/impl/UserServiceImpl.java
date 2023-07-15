@@ -7,6 +7,8 @@ import com.dy.bromatchbackend.exception.BusinessException;
 import com.dy.bromatchbackend.service.UserService;
 import com.dy.bromatchbackend.model.domain.User;
 import com.dy.bromatchbackend.mapper.UserMapper;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -120,7 +123,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 用户脱敏
      * @param user
-     * @return
+     * @return User
      */
     @Override
     public User getSaftyUser(User user) {
@@ -142,14 +145,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if(CollectionUtils.isEmpty(tagNameList)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        /**
+         * 方法一 sql查询
+         */
+//        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+//        //拼接and查询数据
+//        //like'%Java%' and like'%C++%'
+//        for(String tagName : tagNameList){
+//            queryWrapper = queryWrapper.like("tags",tagName);
+//        }
+//        List<User> userList = userMapper.selectList(queryWrapper);
+//        return userList.stream().map(this::getSaftyUser).collect(Collectors.toList());
+        /**
+         * 方法二 内存查询
+         */
+        //1.先查询所有用户
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        //拼接and查询数据
-        //like'%Java%' and like'%C++%'
-        for(String tagName : tagNameList){
-            queryWrapper = queryWrapper.like("tags",tagName);
-        }
         List<User> userList = userMapper.selectList(queryWrapper);
-        return userList.stream().map(this::getSaftyUser).collect(Collectors.toList());
+        Gson gson = new Gson();
+        //2.在内存中判断是否有包含要求标签的用户
+        return userList.stream().filter(user -> {
+            String tagsStr = user.getTags();
+            if(StringUtils.isBlank(tagsStr)){
+                return false;
+            }
+            Set<String> tempTagNameList = gson.fromJson(tagsStr,new TypeToken<Set<String>>(){}.getType());
+            for(String tagName : tagNameList){
+                if(!tempTagNameList.contains(tagName)){
+                    return  false;
+                }
+            }
+            return true;
+        }).map(this::getSaftyUser).collect(Collectors.toList());
     }
 }
 
