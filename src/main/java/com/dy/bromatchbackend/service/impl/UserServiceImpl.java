@@ -17,9 +17,8 @@ import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import javax.swing.text.html.Option;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -140,25 +139,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setUserRole(user.getUserRole());
         return safetyUser;
     }
+
+    /**
+     * 内存查询符合tags用户
+     * @param tagNameList
+     * @return List<User>
+     */
     @Override
     public List<User> searchUsersByTags(List<String> tagNameList){
         if(CollectionUtils.isEmpty(tagNameList)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        /**
-         * 方法一 sql查询
-         */
-//        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-//        //拼接and查询数据
-//        //like'%Java%' and like'%C++%'
-//        for(String tagName : tagNameList){
-//            queryWrapper = queryWrapper.like("tags",tagName);
-//        }
-//        List<User> userList = userMapper.selectList(queryWrapper);
-//        return userList.stream().map(this::getSaftyUser).collect(Collectors.toList());
-        /**
-         * 方法二 内存查询
-         */
         //1.先查询所有用户
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         List<User> userList = userMapper.selectList(queryWrapper);
@@ -170,6 +161,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 return false;
             }
             Set<String> tempTagNameList = gson.fromJson(tagsStr,new TypeToken<Set<String>>(){}.getType());
+            //判定集合是否为空！这个方法可以少些if代码块
+            tempTagNameList = Optional.ofNullable(tempTagNameList).orElse(new HashSet<>());
             for(String tagName : tagNameList){
                 if(!tempTagNameList.contains(tagName)){
                     return  false;
@@ -177,6 +170,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             }
             return true;
         }).map(this::getSaftyUser).collect(Collectors.toList());
+    }
+
+    /**
+     * sql查询
+     * @param tagNameList
+     * @return List<User>
+     */
+    @Deprecated
+    public List<User> searchUsersByTagsBySQL(List<String> tagNameList){
+        if(CollectionUtils.isEmpty(tagNameList)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        //拼接and查询数据
+        //like'%Java%' and like'%C++%'
+        for(String tagName : tagNameList){
+            queryWrapper = queryWrapper.like("tags",tagName);
+        }
+        List<User> userList = userMapper.selectList(queryWrapper);
+        return userList.stream().map(this::getSaftyUser).collect(Collectors.toList());
     }
 }
 
